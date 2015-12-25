@@ -1,0 +1,121 @@
+#compdef vertx
+#autoload
+
+# Vertx Autocomplete plugin for Oh-My-Zsh
+# Supported version: 3.2.0
+# Requires: vertx distribution - https://bintray.com/vertx/downloads/distribution
+# Author: David Silva - https://github.com
+
+function _started_verticle_ids() {
+  local -a verticles
+  verticles=($(vertx list | tail -n +2 | awk '/(.*)\t.*/{print $1}'))
+  _describe -t verticle-ids 'verticle-ids' verticles $* && _ret=0
+}
+
+local -a _1st_arguments
+_1st_arguments=(
+  'bare:Creates a bare instance of vert.x'
+  'list:List all vert.x applications launched with the `start` command'
+  'resolve:Resolve the vert.x stack according to the content of the stack description'
+  'run:Runs a verticle called <main-verticle> in its own instance of vert.x'
+  'start:Start a vert.x application in background'
+  'stop:Stop a vert.x application'
+  'version:Displays the version'
+)
+
+_arguments '*:: :->command'
+
+if (( CURRENT == 1 )); then
+  _describe -t commands "vertx command" _1st_arguments
+  return
+fi
+
+local -a _command_args
+case "$words[1]" in
+  bare)
+    _command_args=(
+            '(--classpath)--classpath[Provides an extra classpath to be used for the verticle deployment.]:classpath:_files' \
+      '(--cluster-host)--cluster-host[host to bind to for cluster communication. If this is not specified\
+                   vert.x will attempt to choose one from the available interfaces.]:host:_hosts' \
+      '(--cluster-port)--cluster-port[Port to use for cluster communication. Default is 0 which means\
+                   choose a spare random port.]:port:' \
+                '(--hagroup)--hagroup[Used in conjunction with -ha this specifies the HA group this node\
+                   will join. Nodes will only failover to other nodes in the same group.]' \
+                  '(--quorum)--quorum[Used in conjunction with -ha this specifies the minimum number of\
+                   nodes in the cluster for any HA deploymentIDs to be active. Defaults to 1.]' \
+                      '(--help)--help[Shows the complete help for the bare command.]'\
+    )
+    ;;
+  list)
+    _command_args=(
+      '(--help)--help[Shows the complete list for the bare command.]'\
+    )
+    ;;
+  resolve)
+    _command_args=(
+      '(--dir)--dir[The directory containing the artifacts composing the stack. Defaults to \
+                             "$VERTX_HOME/lib".]:dir:_directories' \
+      '(--fail-on-conflict)--fail-on-conflict[Set whether or not the resolver should fail or conflict or just log a warning.\
+                             Disabled by default.]' \
+        '(--http-proxy)--http-proxy[Set the HTTP proxy address.]:proxy:_hosts' \
+      '(--https-proxy)--https-proxy[Set the HTTPS proxy address.]:proxy:_hosts' \
+      '(--local-repo)--local-repo[Set the path to the local Maven repository.\
+                             Defaults to "~/.m2/repository".]:repo:_directories' \
+      '(--no-cache)--no-cache[Disable the resolver cache.]' \
+      '(--no-cache-for-snapshots)--no-cache-for-snapshots[Disable the caching of snapshot resolution.]' \
+      '(--remote-repo)--remote-repo[Set the path to a remote Maven repository. Can be set multiple times.]:repo:_urls' \
+      '(--help)--help[Shows the complete help for the resolve command.]'\
+      '*:stack-descriptor:_files -g "*.json"' \
+    )
+    ;;
+  run)
+    _command_args=(
+            '(--classpath)--classpath[Provides an extra classpath to be used for the verticle deployment.]:classpath:_files' \
+                '(--cluster)--cluster[If specified then the vert.x instance will form a cluster with any \
+                                  other vert.x instances on the network.]' \
+      '(--cluster-host)--cluster-host[host to bind to for cluster communication. By default one from the \
+                                  available interfaces is chosen.]:host:_hosts' \
+      '(--cluster-port)--cluster-port[Port to use for cluster communication. Default is 0 which means \
+                                  vert.x will choose a random port.]' \
+                      '(--conf)--conf[Specifies the JSON text or file with the configuration that should \
+                                  be provided to the verticle.]:conf:_files -g "*.json"' \
+                          '(--ha)--ha[If specified the verticle will be deployed as a high availability.]' \
+                '(--hagroup)--hagroup[Specifies the HA group this node will join. Nodes will only failover\
+                                  to other nodes in the same group.]' \
+            '(--instances)--instances[Specifies how many instances of the verticle will be deployed.\
+                                  Defaults to 1.]' \
+        '(--on-redeploy)--on-redeploy[Optional shell command executed when a redeployment is triggered.]' \
+                  '(--quorum)--quorum[Specifies the minimum number of nodes in the cluster for any HA \
+                                  deploymentIDs to be active. Defaults to 1.]' \
+              '(--redeploy)--redeploy[Enable automatic redeployment of the application which matches\
+                                  the given include pattern (*.js,**/*.java).]' \
+      '(--redeploy-grace-period)--redeploy-grace-period[Configures the grace period between 2 redeployments in\
+                                  milliseconds. Defaults to 1000ms.]' \
+        '(--redeploy-scan-period)--redeploy-scan-period[Configures the file system scanning period to detect file changes\
+                                  in milliseconds. Defaults to 250ms.]' \
+      '(--redeploy-termination-period)--redeploy-termination-period[Configures the time waited to be sure that the previous\
+                                  version of the application has been stopped in milliseconds. 0 ms by default.]' \
+      '(--worker)--redeploy-scan-period[Marks the verticle as a worker verticle.]' \
+      '(--help)--help[Shows the complete help for the run command.]'\
+      '*:main-verticle:_files' \
+    )
+    ;;
+  start)
+    _command_args=(
+      '(--java-opts)--java-opts[JVM options to pass to the spawned process. Defaults to `JAVA_OPTS` environment variable.]:jvm:' \
+      '(--vertx-id)--vertx-id[The id of the application, a random UUID by default.]:id:' \
+      '(--help)--help[Shows the complete help for the start command.]'\
+      '*:verticle-file:_files' \
+    )
+    ;;
+  stop)
+    _command_args=(
+      '(--help)--help[Shows the complete help for the stop command.]'\
+      '*:verticle-ids:_started_verticle_ids' \
+    )
+    ;;
+esac
+
+_arguments : \
+  $_command_args \
+  && return 0
